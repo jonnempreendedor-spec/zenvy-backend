@@ -1,22 +1,7 @@
 #zenvy-backend
 
 Backend do Zenvy AI
-/package.json
 /index.js
-
-{
-  "name": "zenvy-api",
-  "version": "1.0.0",
-  "type": "module",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5"
-  }
-}
 
 import express from "express";
 import cors from "cors";
