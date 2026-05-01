@@ -1,15 +1,10 @@
 # zenvy-backend
 Backend do Zenvy AI
 index.js
-import express from "express"
-import cors from "cors"
+const PORT = process.env.PORT || 3000
 
-const app = express()
-app.use(cors())
-app.use(express.json())
-
-app.get("/", (req, res) => {
-  res.send("Zenvy API online 🚀")
+app.listen(PORT, () => {
+  console.log("Server running")
 })
 
 app.post("/ai", async (req, res) => {
@@ -23,3 +18,14 @@ app.post("/ai", async (req, res) => {
 app.listen(3000, () => {
   console.log("Server running")
 })
+package.json
+{
+  "name": "zenvy-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}
