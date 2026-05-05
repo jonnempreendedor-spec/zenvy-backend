@@ -101,10 +101,3 @@ app.post("/send", async (req, res) => {
     res.status(500).json({ error: "erro ao enviar" });
   }
 });
-
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-);
