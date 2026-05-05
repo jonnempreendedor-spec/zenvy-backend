@@ -1,3 +1,10 @@
+const { createClient } = require("@supabase/supabase-js");
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
+
 const express = require("express");
 const fetch = require("node-fetch");
 require("dotenv").config();
