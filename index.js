@@ -1,20 +1,20 @@
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-);
-
 const express = require("express");
 const fetch = require("node-fetch");
 require("dotenv").config();
+const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-/* ROTA TESTE */
+/* SUPABASE */
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY
+);
+
+/* TESTE */
 app.get("/", (req, res) => {
   res.send("API rodando 🚀");
 });
@@ -28,14 +28,13 @@ app.get("/webhook/whatsapp", (req, res) => {
   const challenge = req.query["hub.challenge"];
 
   if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    console.log("✅ Webhook verificado");
     return res.status(200).send(challenge);
   } else {
     return res.sendStatus(403);
   }
 });
 
-/* RECEBER MENSAGEM */
+/* WEBHOOK RECEBER MENSAGEM */
 app.post("/webhook/whatsapp", async (req, res) => {
   try {
     const message =
@@ -46,9 +45,22 @@ app.post("/webhook/whatsapp", async (req, res) => {
     const from = message.from;
     const text = message.text?.body || "";
 
-    console.log("📩", text);
+    console.log("📩 Mensagem recebida:", text);
 
-    await enviarMensagem(from, gerarResposta(text));
+    /* 🔥 SALVAR NO BANCO */
+    await supabase.from("messages").insert([
+      {
+        phone: from,
+        message: text,
+        from_me: false,
+      },
+    ]);
+
+    /* IA SIMPLES */
+    const resposta = gerarResposta(text);
+
+    /* ENVIAR RESPOSTA */
+    await enviarMensagem(from, resposta);
 
     res.sendStatus(200);
   } catch (e) {
@@ -57,19 +69,28 @@ app.post("/webhook/whatsapp", async (req, res) => {
   }
 });
 
-/* IA SIMPLES */
+/* GERAR RESPOSTA IA */
 function gerarResposta(msg) {
   msg = msg.toLowerCase();
 
   if (msg.includes("agendar")) {
-    return "Perfeito! Me fala um dia e horário 😊";
+    return "Perfeito! Me fala o melhor horário 😊";
   }
 
-  return "Entendi! Me conta mais detalhes 👀";
+  return "Entendi! Me conta mais 👀";
 }
 
 /* ENVIAR WHATSAPP */
 async function enviarMensagem(to, message) {
+  /* SALVAR MENSAGEM ENVIADA */
+  await supabase.from("messages").insert([
+    {
+      phone: to,
+      message: message,
+      from_me: true,
+    },
+  ]);
+
   await fetch(
     `https://graph.facebook.com/v18.0/${process.env.PHONE_NUMBER_ID}/messages`,
     {
@@ -88,16 +109,19 @@ async function enviarMensagem(to, message) {
   );
 }
 
-app.listen(PORT, () => console.log("🚀 Rodando na porta", PORT));
+/* BUSCAR MENSAGENS */
+app.get("/messages/:phone", async (req, res) => {
+  const { phone } = req.params;
 
-app.post("/send", async (req, res) => {
-  const { to, message } = req.body;
+  const { data, error } = await supabase
+    .from("messages")
+    .select("*")
+    .eq("phone", phone)
+    .order("created_at", { ascending: true });
 
-  try {
-    await enviarMensagem(to, message);
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "erro ao enviar" });
-  }
+  if (error) return res.status(500).json(error);
+
+  res.json(data);
 });
+
+app.listen(PORT, () => console.log("🚀 Rodando na porta", PORT));
