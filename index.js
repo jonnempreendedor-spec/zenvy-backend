@@ -82,3 +82,15 @@ async function enviarMensagem(to, message) {
 }
 
 app.listen(PORT, () => console.log("🚀 Rodando na porta", PORT));
+
+app.post("/send", async (req, res) => {
+  const { to, message } = req.body;
+
+  try {
+    await enviarMensagem(to, message);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "erro ao enviar" });
+  }
+});
